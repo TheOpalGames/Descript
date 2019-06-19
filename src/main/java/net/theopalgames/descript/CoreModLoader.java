@@ -18,6 +18,7 @@ import net.minecraftforge.fml.loading.LoadingModList;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
 import net.theopalgames.descript.api.DescriptCoreMod;
+import net.theopalgames.descript.reflect.ReflectUtil;
 
 @UtilityClass
 public class CoreModLoader {

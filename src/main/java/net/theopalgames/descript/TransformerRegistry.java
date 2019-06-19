@@ -6,6 +6,7 @@ import cpw.mods.modlauncher.TransformationServiceDecorator;
 import cpw.mods.modlauncher.api.ITransformationService;
 import cpw.mods.modlauncher.api.ITransformer;
 import net.theopalgames.descript.api.ITransformerRegistry;
+import net.theopalgames.descript.reflect.ReflectUtil;
 
 final class TransformerRegistry implements ITransformerRegistry {
 	private final TransformStore cpwRegistry = ReflectUtil.readField(Launcher.class, "transformStore", Launcher.INSTANCE);
