@@ -28,9 +28,11 @@ public class CoreModLoader {
 	private final TransformerRegistry transformers = new TransformerRegistry();
 	private final List<ModContainer> containers = new ArrayList<>();
 	
-	public void enterJava() {
+	public void loadDescriptPlugins() {
 		LoadingModList mods = ReflectUtil.readField(FMLLoader.class, "loadingModList");
 		mods.getModFiles().stream().map(ModFileInfo::getFile).map(ModFile::getFilePath).map(Path::toUri).forEach(CoreModLoader::processFile);
+		
+		transformers.outputTransformers();
 	}
 	
 	@SneakyThrows
