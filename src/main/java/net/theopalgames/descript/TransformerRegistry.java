@@ -15,7 +15,7 @@ import net.theopalgames.descript.transformers.LwWrapperTransformer;
 
 final class TransformerRegistry implements ITransformerRegistry {
 	private final TransformStore cpwRegistry = ReflectUtil.readField(Launcher.class, "transformStore", Launcher.INSTANCE);
-	private final Set<String> serialize = new HashSet<>();
+	final Set<String> serialize = new HashSet<>();
 	private final DescriptTransformService service = new DescriptTransformService();
 	
 	@Override

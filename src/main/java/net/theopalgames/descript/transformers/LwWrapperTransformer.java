@@ -9,6 +9,7 @@ import org.objectweb.asm.tree.ClassNode;
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.theopalgames.descript.EverythingSet;
 import net.theopalgames.descript.api.launchwrapper.IClassTransformer;
@@ -17,10 +18,12 @@ import net.theopalgames.descript.api.launchwrapper.IClassTransformer;
 public final class LwWrapperTransformer implements ITransformer<ClassNode> {
 	private static final byte[] dummyCode = new byte[] {0xc, 0x0, 0xf, 0xf, 0xe, 0xe};
 	
+	@Getter
 	private final IClassTransformer transformer;
 	private final boolean serialize;
 	
-	private final ThreadLocal<ClassNode> transformedNode = new ThreadLocal<>();
+	public final ThreadLocal<ClassNode> untransformedNode = new ThreadLocal<>();
+	public final ThreadLocal<ClassNode> transformedNode = new ThreadLocal<>();
 	
 	@Override
 	public ClassNode transform(ClassNode input, ITransformerVotingContext context) {
@@ -35,6 +38,7 @@ public final class LwWrapperTransformer implements ITransformer<ClassNode> {
 			new ClassReader(transformedClass).accept(out, 0);
 			return out;
 		} else {
+			untransformedNode.set(input);
 			transformer.transform(input.name, dummyCode);
 			return transformedNode.get();
 		}

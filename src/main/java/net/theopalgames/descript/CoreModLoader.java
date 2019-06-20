@@ -26,7 +26,7 @@ public class CoreModLoader {
 	
 	private final CoremodClassLoader classLoader = new CoremodClassLoader();
 	private final List<File> toRemove = new ArrayList<>();
-	private final TransformerRegistry transformers = new TransformerRegistry();
+	final TransformerRegistry transformers = new TransformerRegistry();
 	private final List<ModContainer> containers = new ArrayList<>();
 	
 	public void loadDescriptPlugins() {
