@@ -58,6 +58,10 @@ public final class ComputingMethodVisitor extends MethodVisitor {
 	}
 	
 	private void compressFrame(int nLocal, Object[] local, int nStack, Object[] stack) {
-		// TODO
+		Frame newFrame = new Frame(nLocal, local, nStack, stack);
+		DiffFrame diff = frame.diff(newFrame);
+		frame = newFrame;
+		
+		mv.visitFrame(diff.type, diff.nLocal, diff.local, diff.nStack, diff.stack);
 	}
 }
