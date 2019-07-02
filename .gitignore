@@ -27,3 +27,4 @@ forge*changelog.txt
 
 # stuff they forgot
 gradle-wrapper.jar
+.DS_Store
