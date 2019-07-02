@@ -13,6 +13,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -20,11 +21,12 @@ import org.objectweb.asm.tree.VarInsnNode;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import net.theopalgames.descript.UclClassLoader;
 
 @UtilityClass
 public class UclTransformer {
 	@SneakyThrows
-	public byte[] getUclLoader() {
+	public byte[] getUclLoader(UclClassLoader classLoader) {
 		InputStream in = URLClassLoader.class.getResourceAsStream("/java/net/URLClassLoader.class");
 		
 		byte[] bytes;
@@ -36,7 +38,7 @@ public class UclTransformer {
 		ClassNode clazz = new ClassNode();
 		new ClassReader(bytes).accept(clazz, ClassReader.SKIP_FRAMES);
 		
-		clazz.name = "net/theopalgames/descript/ClassLoaderDelegate";
+		clazz.name = "net/theopalgames/descript/ucl/ClassLoaderDelegate";
 		clazz.interfaces.add("net/theopalgames/descript/IClassLoaderDelegate");
 		
 		String clPackage = null;
@@ -54,7 +56,7 @@ public class UclTransformer {
 		if (clPackage == null)
 			throw new IllegalStateException("What weird JDK are you using?");
 		
-		for (MethodNode method : clazz.methods)
+		for (MethodNode method : clazz.methods) {
 			if (method.name.equals("defineClass")) {
 				method.desc = "(Ljava/lang/String;L" + clPackage + "/Resource;Z)Ljava/lang/Object;";
 				
@@ -92,6 +94,18 @@ public class UclTransformer {
 						}
 					}
 			}
+			
+			for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator())
+				if (insn instanceof MethodInsnNode) {
+					MethodInsnNode cast = (MethodInsnNode) insn;
+					
+					if (cast.owner.equals("java/net/URLClassLoader"))
+						cast.owner = "net/theopalgames/descript/ucl/ClassLoaderDelegate";
+				}
+		}
+		
+		for (InnerClassNode inner : clazz.innerClasses)
+			InnerUclTransformer.loadBytes(inner.name, classLoader);
 		
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 		clazz.accept(cw);
