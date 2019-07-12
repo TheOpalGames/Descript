@@ -6,12 +6,17 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public final class ComputingClassVisitor extends ClassVisitor {
-	private final boolean computeFrames;
 	private int version;
 	
 	public ComputingClassVisitor(int flags, ClassVisitor cv) {
-		super(Opcodes.ASM6, cv);
-		this.computeFrames = ((flags & ClassWriter.COMPUTE_FRAMES) != 0);
+		super(Opcodes.ASM6, findDelegate(flags, cv));
+	}
+	
+	private static ClassVisitor findDelegate(int flags, ClassVisitor cv) {
+		if ((flags & ClassWriter.COMPUTE_FRAMES) != 0)
+			return new FrameComputingClassVisitor(cv);
+		
+		return cv;
 	}
 	
 	@Override
@@ -26,6 +31,6 @@ public final class ComputingClassVisitor extends ClassVisitor {
 		if (mv == null)
 			return null;
 		
-		return new ComputingMethodVisitor(api, computeFrames, version, desc, mv);
+		return new ComputingMethodVisitor(api, version, desc, mv);
 	}
 }

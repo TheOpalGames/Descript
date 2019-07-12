@@ -35,7 +35,7 @@ public final class ParsingMethodVisitor extends MethodVisitor {
 		return ret;
 	}
 	
-	private static Object toFrameType(Type type) {
+	static Object toFrameType(Type type) {
 		String desc = type.getDescriptor();
 		
 		if (desc.startsWith("L"))
@@ -76,32 +76,8 @@ public final class ParsingMethodVisitor extends MethodVisitor {
 			return;
 		}
 		
-		switch (type) {
-		case Opcodes.F_NEW:
-			frame = new Frame(nLocal, local, nStack, stack);
-			break;
-		case Opcodes.F_APPEND:
-			Object[] bigLocal = new Object[frame.nLocal+nLocal];
-			System.arraycopy(frame.local, 0, bigLocal, 0, frame.nLocal);
-			System.arraycopy(local, 0, bigLocal, frame.local.length, nLocal);
-			frame = new Frame(frame.nLocal+nLocal, bigLocal, frame.nStack, frame.stack);
-			break;
-		case Opcodes.F_CHOP:
-			Object[] smallLocal = new Object[frame.local.length+nLocal];
-			System.arraycopy(frame.local, 0, smallLocal, 0, frame.nLocal+nLocal);
-			frame = new Frame(frame.nLocal+nLocal, smallLocal, frame.nStack, frame.stack);
-			break;
-		case Opcodes.F_FULL:
-			frame = new Frame(nLocal, local, nStack, stack);
-			break;
-		case Opcodes.F_SAME:
-			frame = new Frame(frame.nLocal, frame.local, 0, new Object[0]);
-			break;
-		case Opcodes.F_SAME1:
-			frame = new Frame(frame.nLocal, frame.local, 1, stack);
-			break;
-		}
-		
+		DiffFrame diff = new DiffFrame(type, nLocal, local, nStack, stack);
+		frame = frame.apply(diff);
 		mv.visitFrame(Opcodes.F_NEW, frame.nLocal, frame.local, frame.nStack, frame.stack);
 	}
 	

@@ -5,7 +5,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 public final class ComputingMethodVisitor extends MethodVisitor {
-	private final boolean computeFrames;
 	private final int version;
 	
 	private int maxStack = 0;
@@ -13,9 +12,8 @@ public final class ComputingMethodVisitor extends MethodVisitor {
 	
 	private Frame frame;
 	
-	public ComputingMethodVisitor(int api, boolean computeFrames, int version, String desc, MethodVisitor mv) {
+	public ComputingMethodVisitor(int api, int version, String desc, MethodVisitor mv) {
 		super(api, mv);
-		this.computeFrames = computeFrames;
 		this.version = version;
 		
 		Type type = Type.getMethodType(desc);
@@ -37,13 +35,8 @@ public final class ComputingMethodVisitor extends MethodVisitor {
 			return;
 		}
 		
-		if (!computeFrames && (type == Opcodes.F_NEW && version < Opcodes.V1_6)) {
+		if (type == Opcodes.F_NEW && version < Opcodes.V1_6) {
 			mv.visitFrame(type, nLocal, local, nStack, stack);
-			return;
-		}
-		
-		if (computeFrames) {
-			computeFrame();
 			return;
 		}
 		
@@ -51,10 +44,8 @@ public final class ComputingMethodVisitor extends MethodVisitor {
 			compressFrame(nLocal, local, nStack, stack);
 			return;
 		}
-	}
-	
-	private void computeFrame() {
-		// TODO
+		
+		mv.visitFrame(type, nLocal, local, nStack, stack);
 	}
 	
 	private void compressFrame(int nLocal, Object[] local, int nStack, Object[] stack) {
