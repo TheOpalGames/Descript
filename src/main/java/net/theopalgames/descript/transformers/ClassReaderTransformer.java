@@ -18,7 +18,6 @@ import org.objectweb.asm.tree.VarInsnNode;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
-import net.theopalgames.descript.asm.NonserializedClassReader;
 
 @UtilityClass
 public class ClassReaderTransformer {
@@ -63,14 +62,14 @@ public class ClassReaderTransformer {
 		return insn;
 	}
 	
-	public boolean shouldReturn(byte[] bytes) {
-		if (bytes.length != NonserializedClassReader.dummyInitBytes.length)
-			return false;
-		
-		for (int i = 0; i < bytes.length; i++)
-			if (bytes[i] != NonserializedClassReader.dummyInitBytes[i])
-				return false;
-		
-		return true;
-	}
+//	public boolean shouldReturn(byte[] bytes) {
+//		if (bytes.length != NonserializedClassReader.dummyInitBytes.length)
+//			return false;
+//		
+//		for (int i = 0; i < bytes.length; i++)
+//			if (bytes[i] != NonserializedClassReader.dummyInitBytes[i])
+//				return false;
+//		
+//		return true;
+//	}
 }
