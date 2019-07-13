@@ -11,6 +11,11 @@ function initializeCoreMod() {
 				"names": MAIN_CLASSES // Please don't use a different main class, maybe that will be supported in the future, who knows...
 			},
 			"transformer": function(clazz) {
+				if (run)
+					return;
+				
+				run = true;
+				
 				var Opcodes = Java.type("org.objectweb.asm.Opcodes");
 				var MethodNode = Java.type("org.objectweb.asm.tree.MethodNode");
 				var LdcInsnNode = Java.type("org.objectweb.asm.tree.LdcInsnNode");
