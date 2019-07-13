@@ -1,5 +1,5 @@
-const MAIN_CLASSES = ["net.minecraft.client.main.Main", "net.minecraft.server.MinecraftServer", "net.minecraft.data.Main"];
-const INIT_BYTECODE = []; // TODO
+var MAIN_CLASSES = ["net.minecraft.client.main.Main", "net.minecraft.server.MinecraftServer", "net.minecraft.data.Main"];
+var INIT_BYTECODE = []; // TODO
 
 var run = false;
 
