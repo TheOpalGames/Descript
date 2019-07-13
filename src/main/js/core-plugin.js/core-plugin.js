@@ -27,10 +27,10 @@ function initializeCoreMod() {
 		invokeMethod(arrayClass, "set", [objectClass, intType, objectClass], null, [array, i, integer.byteValue()]); // Array.set(Object array, int index, Object value)
 	}
 	
-	var secureLoaderClass = clType.forName("java.security.ClassLoader");
-	var initClass = invokeMethod(secureLoaderClass, "defineClass", classLoader, [stringClass, array.getClass(), intType, intType], ["net/theopalgames/descript/DescriptInit", array, 0, classBytes.length]);
+	var secureLoaderClass = clType.forName("java.security.SecureClassLoader");
+	var initClass = invokeMethod(secureLoaderClass, "defineClass", classLoader, [stringClass, array.getClass(), intType, intType], ["net/theopalgames/descript/DescriptInit", array, 0, classBytes.length]); // SecureClassLoader.defineClass(String name, byte[] bytes, int offset, int len)
 	
-	invokeMethod(initClass, "javaEntry", null, [], []);
+	invokeMethod(initClass, "javaEntry", null, [], []); // DescriptInit.javaEntry()
 	
 	return {};
 }
