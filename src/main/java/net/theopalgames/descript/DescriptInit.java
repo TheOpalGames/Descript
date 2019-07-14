@@ -1,6 +1,7 @@
 package net.theopalgames.descript;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -10,6 +11,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import javax.annotation.Nullable;
+
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
+
+import com.google.common.io.ByteStreams;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
@@ -42,15 +48,32 @@ public class DescriptInit {
 		CoreModFile fileWrapper;
 		File file = null;
 		JarEntry entry;
+		byte[] bytes;
+		ClassNode clazz;
 		
 		for (CoreMod coreMod : coreMods) {
 			fileWrapper = readField(CoreMod.class, "file", coreMod);
 			file = fileWrapper.getPath().toFile();
 			
-			try (JarFile jar = new JarFile(file)) {
-				entry = jar.getJarEntry(DescriptInit.class.getName().replace('.', '/') + ".class");
-				if (entry != null)
-					break;
+			if (file.isFile()) {
+				if (file.getName().endsWith(".jar"))
+					try (JarFile jar = new JarFile(file)) {
+						entry = jar.getJarEntry(DescriptInit.class.getName().replace('.', '/') + ".class");
+						if (entry != null)
+							break;
+					}
+				else if (file.getName().endsWith(".class")) { // dev env and stuff
+					try (FileInputStream in = new FileInputStream(file)) {
+						bytes = new byte[(int) file.length()];
+						ByteStreams.readFully(in, bytes); // TODO: Stop using Google Guava because Google sucks and DuckDuckGo is better
+						
+						clazz = new ClassNode();
+						new ClassReader(bytes).accept(clazz, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+						
+						if (clazz.name.equals(DescriptInit.class.getName().replace('.', '/')))
+							break;
+					}
+				}
 			}
 		}
 		
