@@ -2,6 +2,9 @@ package net.theopalgames.descript;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -18,13 +21,18 @@ import net.minecraftforge.fml.loading.moddiscovery.CoreModFile;
 
 @UtilityClass
 public class DescriptInit {
-	public void javaEntry() {
+	public void javaEntry() throws Exception {
 		File descriptJar = findDescriptJar();
+		URL url = descriptJar.toURI().toURL();
 		
+		URLClassLoader ucl = new URLClassLoader(new URL[] {url});
+		Class<?> loader = Class.forName("net.theopalgames.descript.CoreModLoader", true, ucl);
+		
+		Method loadDescriptPlugins = loader.getDeclaredMethod("loadDescriptPlugins");
+		loadDescriptPlugins.invoke(null);
 	}
 	
-	@SneakyThrows
-	private File findDescriptJar() {
+	private File findDescriptJar() throws Exception {
 		CoreModProvider provider = (CoreModProvider) FMLLoader.getCoreModProvider();
 		CoreModEngine engine = readField(CoreModProvider.class, "engine", provider);
 		
