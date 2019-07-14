@@ -19,6 +19,8 @@ import net.minecraftforge.coremod.CoreModProvider;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.moddiscovery.CoreModFile;
 
+// WARNING: If you make any changes to this file, you need to recompile it and put the bytes into src/main/js/core-plugin.js
+
 @UtilityClass
 public class DescriptInit {
 	public void javaEntry() throws Exception {
