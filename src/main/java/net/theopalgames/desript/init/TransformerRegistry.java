@@ -1,4 +1,4 @@
-package net.theopalgames.descript;
+package net.theopalgames.desript.init;
 
 import java.util.HashSet;
 import java.util.Set;

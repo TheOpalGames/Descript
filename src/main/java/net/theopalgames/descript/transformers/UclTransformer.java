@@ -26,7 +26,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
-import net.theopalgames.descript.UclClassLoader;
+import net.theopalgames.desript.init.UclClassLoader;
 
 @UtilityClass
 public class UclTransformer {

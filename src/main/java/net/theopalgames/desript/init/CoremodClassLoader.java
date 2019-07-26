@@ -1,4 +1,4 @@
-package net.theopalgames.descript;
+package net.theopalgames.desript.init;
 
 import java.net.URL;
 import java.security.CodeSource;
@@ -26,9 +26,7 @@ public final class CoremodClassLoader extends SecureClassLoader {
 	
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		int lastDot = name.lastIndexOf('.');
-		
-		if (name.substring(0, lastDot).equals("net.theopalgames.descript"))
+		if (name.startsWith("net.theopalgames.descript.init."))
 			return parent.loadClass(name);
 		
 		try {

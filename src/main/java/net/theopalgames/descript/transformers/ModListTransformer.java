@@ -18,8 +18,8 @@ import cpw.mods.modlauncher.api.TransformerVoteResult;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
-import net.theopalgames.descript.CoreModLoader;
 import net.theopalgames.descript.containers.DelegatingModInfo;
+import net.theopalgames.desript.init.CoreModLoader;
 
 public final class ModListTransformer implements ITransformer<MethodNode> {
 	@Override

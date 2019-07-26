@@ -1,4 +1,4 @@
-package net.theopalgames.descript;
+package net.theopalgames.desript.init;
 
 import java.io.File;
 import java.io.FileInputStream;
