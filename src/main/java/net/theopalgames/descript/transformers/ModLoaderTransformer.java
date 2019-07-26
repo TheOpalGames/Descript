@@ -2,6 +2,7 @@ package net.theopalgames.descript.transformers;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -15,6 +16,7 @@ import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
 import net.minecraftforge.fml.ModContainer;
+import net.theopalgames.descript.CoreModLoader;
 
 public final class ModLoaderTransformer implements ITransformer<MethodNode> {
 	@Override
@@ -46,6 +48,8 @@ public final class ModLoaderTransformer implements ITransformer<MethodNode> {
 //		System.out.print("Removing descript dummy mod...");
 		
 		theList.removeIf(container -> container.getModId().equals("descript-dummy"));
+		theList.addAll(CoreModLoader.getContainers());
+		
 		return theList;
 	}
 }

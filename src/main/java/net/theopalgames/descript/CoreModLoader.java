@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.jar.Attributes.Name;
 import java.util.jar.JarFile;
@@ -18,6 +19,9 @@ import net.minecraftforge.fml.loading.LoadingModList;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
 import net.theopalgames.descript.api.CoreMod;
+import net.theopalgames.descript.api.IDescriptModInfo;
+import net.theopalgames.descript.containers.DescriptBaseContainer;
+import net.theopalgames.descript.containers.DescriptFmlContainer;
 import net.theopalgames.descript.reflect.ReflectUtil;
 
 @UtilityClass
@@ -82,8 +86,12 @@ public class CoreModLoader {
 	private void loadCoreMod(CoreMod coreMod) {
 		coreMod.injectTransformers(transformers);
 		
-		ModContainer container = coreMod.getModContainer();
-		if (container != null)
-			containers.add(container);
+		IDescriptModInfo info = coreMod.getModInfo();
+		if (info != null)
+			containers.add(info.getMain() == null ? new DescriptBaseContainer(info) : new DescriptFmlContainer(info));
+	}
+	
+	public List<ModContainer> getContainers() {
+		return Collections.unmodifiableList(containers);
 	}
 }

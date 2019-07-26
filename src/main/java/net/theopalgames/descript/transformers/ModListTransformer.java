@@ -2,6 +2,7 @@ package net.theopalgames.descript.transformers;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -14,7 +15,11 @@ import com.google.common.collect.Sets;
 import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
+import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
+import net.minecraftforge.forgespi.language.IModInfo;
+import net.theopalgames.descript.CoreModLoader;
+import net.theopalgames.descript.containers.DelegatingModInfo;
 
 public final class ModListTransformer implements ITransformer<MethodNode> {
 	@Override
@@ -46,5 +51,17 @@ public final class ModListTransformer implements ITransformer<MethodNode> {
 	
 	public static void transformList(List<ModInfo> list) {
 		list.removeIf(info -> info.getModId().equals("descript-dummy"));
+		list.addAll(CoreModLoader.getContainers()
+				.stream()
+				.map(ModContainer::getModInfo)
+				.map(ModListTransformer::convertInfo)
+				.collect(Collectors.toList()));
+	}
+	
+	private static ModInfo convertInfo(IModInfo info) {
+		if (info instanceof ModInfo)
+			return (ModInfo) info;
+		
+		return DelegatingModInfo.create(info);
 	}
 }
