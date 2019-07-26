@@ -17,7 +17,7 @@ import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.LoadingModList;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
-import net.theopalgames.descript.api.DescriptCoreMod;
+import net.theopalgames.descript.api.CoreMod;
 import net.theopalgames.descript.reflect.ReflectUtil;
 
 @UtilityClass
@@ -30,6 +30,8 @@ public class CoreModLoader {
 	private final List<ModContainer> containers = new ArrayList<>();
 	
 	public void loadDescriptPlugins() {
+		loadCoreMod(new DescriptCoreMod());
+		
 		LoadingModList mods = ReflectUtil.readField(FMLLoader.class, "loadingModList");
 		mods.getModFiles().stream().map(ModFileInfo::getFile).map(ModFile::getFilePath).map(Path::toUri).forEach(CoreModLoader::processFile);
 		
@@ -71,13 +73,13 @@ public class CoreModLoader {
 		classLoader.addURL(file.toURI().toURL());
 		
 		Class<?> clazz = Class.forName(name, true, classLoader);
-		Class<? extends DescriptCoreMod> cast = clazz.asSubclass(DescriptCoreMod.class);
+		Class<? extends CoreMod> cast = clazz.asSubclass(CoreMod.class);
 		
-		DescriptCoreMod coreMod = cast.newInstance();
+		CoreMod coreMod = cast.newInstance();
 		loadCoreMod(coreMod);
 	}
 	
-	private void loadCoreMod(DescriptCoreMod coreMod) {
+	private void loadCoreMod(CoreMod coreMod) {
 		coreMod.injectTransformers(transformers);
 		
 		ModContainer container = coreMod.getModContainer();

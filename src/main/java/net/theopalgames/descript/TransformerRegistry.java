@@ -25,7 +25,7 @@ final class TransformerRegistry implements ITransformerRegistry {
 	
 	@Override
 	public void registerLaunchWrapperTransformer(IClassTransformer transformer) {
-		registerModLauncherTransformer(new LwWrapperTransformer(transformer, serialize.contains(transformer.getClass().getName())));
+		registerModLauncherTransformer(new LwWrapperTransformer(transformer, true));
 	}
 	
 	void outputTransformers() {
