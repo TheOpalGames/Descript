@@ -10,9 +10,9 @@ import net.theopalgames.descript.transformers.UclTransformer;
 public final class UclClassLoader extends SecureClassLoader {
 	public IClassLoaderDelegate getDelegate() {
 		byte[] uclBytes = UclTransformer.getUclLoader(this);
-		Class<?> clazz = defineClass("net.theopalgames.descript.ClassLoaderDelegate", uclBytes, 0, uclBytes.length);
+		Class<?> clazz = defineClass("net.theopalgames.descript.ucl.ClassLoaderDelegate", uclBytes, 0, uclBytes.length);
 		Class<? extends IClassLoaderDelegate> cast = clazz.asSubclass(IClassLoaderDelegate.class);
-		return ReflectUtil.findConstructor(cast, URL[].class).newInstance((Object) new URL[0]);
+		return ReflectUtil.findConstructor(cast, URL[].class, ClassLoader.class).newInstance((Object) new URL[0], getClass().getClassLoader());
 	}
 	
 	public Class<?> createClass(String name, byte[] bytes, ProtectionDomain domain) {

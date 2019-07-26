@@ -6,8 +6,10 @@ import java.net.URLClassLoader;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -17,7 +19,12 @@ import net.theopalgames.descript.UclClassLoader;
 @UtilityClass
 public class InnerUclTransformer {
 	public void loadBytes(String name, UclClassLoader classLoader) throws Exception {
-		InputStream in = URLClassLoader.class.getResourceAsStream("/" + name);
+//		System.out.println("Transforming inner class: " + name);
+		
+		if (!name.startsWith("java/net/"))
+			return;
+		
+		InputStream in = URLClassLoader.class.getResourceAsStream("/" + name + ".class");
 		
 		byte[] bytes;
 		try (BufferedInputStream bin = new BufferedInputStream(in)) {
@@ -30,20 +37,37 @@ public class InnerUclTransformer {
 		
 		clazz.name = clazz.name.replace("java/net/", "net/theopalgames/descript/ucl/");
 		
-		for (MethodNode method : clazz.methods)
+		for (MethodNode method : clazz.methods) {
+			Type type = Type.getMethodType(method.desc);
+			Type[] args = type.getArgumentTypes();
+			
+			for (int i = 0; i < args.length; i++) {
+				if (args[i].getDescriptor().equals("Ljava/net/URLClassLoader;"))
+					args[i] = Type.getType("Lnet/theopalgames/descript/ucl/ClassLoaderDelegate;");
+			}
+			
 			for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator())
 				if (insn instanceof MethodInsnNode) {
 					MethodInsnNode cast = (MethodInsnNode) insn;
 					
 					if (cast.owner.equals("java/net/URLClassLoader"))
 						cast.owner = "net/theopalgames/descript/ucl/ClassLoaderDelegate";
+				} else if (insn instanceof FieldInsnNode) {
+					FieldInsnNode cast = (FieldInsnNode) insn;
+					
+					if (cast.owner.equals("java/net/URLClassLoader"))
+						cast.owner = "net/theopalgames/descript/ucl/ClassLoaderDelegate";
 				}
+			
+			Type newType = Type.getMethodType(type.getReturnType(), args);
+			method.desc = newType.getDescriptor();
+		}
 		
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 		clazz.accept(cw);
 		byte[] newBytes = cw.toByteArray();
 		
 		Class<?> oldClass = Class.forName(name.replace('/', '.'));
-		classLoader.createClass(name, newBytes, oldClass.getProtectionDomain());
+		classLoader.createClass(clazz.name.replace('/', '.'), newBytes, oldClass.getProtectionDomain());
 	}
 }

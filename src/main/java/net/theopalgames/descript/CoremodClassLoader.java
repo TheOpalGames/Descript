@@ -4,15 +4,14 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.security.SecureClassLoader;
 
-import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.TransformingClassLoader;
-import net.theopalgames.descript.reflect.ReflectUtil;
+import net.minecraftforge.fml.loading.FMLLoader;
 
 public final class CoremodClassLoader extends SecureClassLoader {
 	private final IClassLoaderDelegate delegate;
 	private final ClassLoader parent;
 	
-	public static final TransformingClassLoader gameLoader = ReflectUtil.readField(Launcher.class, "classLoader");
+	public static final TransformingClassLoader gameLoader = FMLLoader.getLaunchClassLoader();
 	
 	public CoremodClassLoader() {
 		super(null);
