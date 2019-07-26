@@ -2,7 +2,6 @@ package net.theopalgames.descript.transformers;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
