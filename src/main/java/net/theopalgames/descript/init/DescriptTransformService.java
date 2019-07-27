@@ -1,4 +1,4 @@
-package net.theopalgames.desript.init;
+package net.theopalgames.descript.init;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package net.theopalgames.desript.init;
+package net.theopalgames.descript.init;
 
 import java.net.URL;
 import java.security.CodeSource;

@@ -26,10 +26,13 @@ import org.objectweb.asm.tree.VarInsnNode;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
-import net.theopalgames.desript.init.UclClassLoader;
+import net.theopalgames.descript.init.UclClassLoader;
 
 @UtilityClass
 public class UclTransformer {
+	public static final String OLD_NAME = "java/net/URLClassLoader";
+	public static final String INTERFACE = "net/theopalgames/descript/init/IClassLoaderDelegate";
+	
 	@SneakyThrows
 	public byte[] getUclLoader(UclClassLoader classLoader) {
 		InputStream in = URLClassLoader.class.getResourceAsStream("/java/net/URLClassLoader.class");
@@ -44,7 +47,7 @@ public class UclTransformer {
 		new ClassReader(bytes).accept(clazz, ClassReader.SKIP_FRAMES);
 		
 		clazz.name = "net/theopalgames/descript/ucl/ClassLoaderDelegate";
-		clazz.interfaces.add("net/theopalgames/descript/IClassLoaderDelegate");
+		clazz.interfaces.add(INTERFACE);
 		
 		String clPackage = null;
 		

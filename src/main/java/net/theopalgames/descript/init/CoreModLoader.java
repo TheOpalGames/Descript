@@ -1,16 +1,19 @@
-package net.theopalgames.desript.init;
+package net.theopalgames.descript.init;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.jar.Attributes.Name;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
+import cpw.mods.modlauncher.TransformingClassLoader;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import net.minecraftforge.fml.ModContainer;
@@ -37,10 +40,23 @@ public class CoreModLoader {
 	public void loadDescriptPlugins() {
 		loadCoreMod(new DescriptCoreMod());
 		
+		swapClassFinder();
+		
 		LoadingModList mods = ReflectUtil.readField(FMLLoader.class, "loadingModList");
 		mods.getModFiles().stream().map(ModFileInfo::getFile).map(ModFile::getFilePath).map(Path::toUri).forEach(CoreModLoader::processFile);
 		
 		transformers.outputTransformers();
+	}
+	
+	private void swapClassFinder() {
+		Function<String, URL> oldFinder = ReflectUtil.readField(TransformingClassLoader.class, "classBytesFinder", CoremodClassLoader.gameLoader);
+		Function<String, URL> newFinder = oldFinder.andThen(url -> (isDescript(url) ? null : url));
+		
+		ReflectUtil.writeField(TransformingClassLoader.class, "classBytesFinder", CoremodClassLoader.gameLoader, newFinder);
+	}
+	
+	private boolean isDescript(URL url) {
+		return url == null || url.getHost().equals("descript-dummy");
 	}
 	
 	@SneakyThrows

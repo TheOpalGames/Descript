@@ -14,7 +14,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import lombok.experimental.UtilityClass;
-import net.theopalgames.desript.init.UclClassLoader;
+import net.theopalgames.descript.init.UclClassLoader;
 
 @UtilityClass
 public class InnerUclTransformer {
