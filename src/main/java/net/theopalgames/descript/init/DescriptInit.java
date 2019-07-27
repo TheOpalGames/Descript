@@ -34,9 +34,9 @@ public class DescriptInit {
 		URL url = descriptJar.toURI().toURL();
 		
 		URLClassLoader ucl = new URLClassLoader(new URL[] {url});
-		Class<?> loader = Class.forName("net.theopalgames.descript.init.CoreModLoader", true, ucl);
+		Class<?> loader = Class.forName("net.theopalgames.descript.init.CoremodBootstrap", true, ucl);
 		
-		Method loadDescriptPlugins = loader.getDeclaredMethod("loadDescriptPlugins");
+		Method loadDescriptPlugins = loader.getDeclaredMethod("init");
 		loadDescriptPlugins.invoke(null);
 	}
 	

@@ -1,4 +1,4 @@
-package net.theopalgames.descript.init;
+package net.theopalgames.descript.coremods;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,13 +26,14 @@ import net.theopalgames.descript.api.CoreMod;
 import net.theopalgames.descript.api.IDescriptModInfo;
 import net.theopalgames.descript.containers.DescriptBaseContainer;
 import net.theopalgames.descript.containers.DescriptFmlContainer;
+import net.theopalgames.descript.init.CoremodBootstrap;
+import net.theopalgames.descript.init.CoremodClassLoader;
 import net.theopalgames.descript.reflect.ReflectUtil;
 
 @UtilityClass
 public class CoreModLoader {
 	private final Name DESCRIPT_CORE_MOD = new Name("Descript-Core-Mod");
 	
-	private final CoremodClassLoader classLoader = new CoremodClassLoader();
 	private final List<File> toRemove = new ArrayList<>();
 	final TransformerRegistry transformers = new TransformerRegistry();
 	private final List<ModContainer> containers = new ArrayList<>();
@@ -91,9 +92,9 @@ public class CoreModLoader {
 			return;
 		
 		toRemove.add(file);
-		classLoader.addURL(file.toURI().toURL());
+		CoremodBootstrap.classLoader.addURL(file.toURI().toURL());
 		
-		Class<?> clazz = Class.forName(name, true, classLoader);
+		Class<?> clazz = Class.forName(name, true, CoremodBootstrap.classLoader);
 		Class<? extends CoreMod> cast = clazz.asSubclass(CoreMod.class);
 		
 		CoreMod coreMod = cast.newInstance();

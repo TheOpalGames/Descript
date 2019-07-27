@@ -15,7 +15,7 @@ import cpw.mods.modlauncher.api.ITransformer;
 import cpw.mods.modlauncher.api.ITransformerVotingContext;
 import cpw.mods.modlauncher.api.TransformerVoteResult;
 import net.minecraftforge.fml.ModContainer;
-import net.theopalgames.descript.init.CoreModLoader;
+import net.theopalgames.descript.coremods.CoreModLoader;
 
 public final class ModLoaderTransformer implements ITransformer<MethodNode> {
 	@Override

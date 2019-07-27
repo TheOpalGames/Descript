@@ -46,6 +46,12 @@ public class ReflectUtil {
 	}
 	
 	@SneakyThrows
+	public <T> ReflectedMethod<T> findPublic(Class<?> owner, String name, Class<?>... params) {
+		Method method = owner.getMethod(name, params);
+		return new ReflectedMethod<>(method);
+	}
+	
+	@SneakyThrows
 	public <T> ReflectedConstructor<T> findConstructor(Class<T> type, Class<?>... params) {
 		Constructor<T> constructor = type.getDeclaredConstructor(params);
 		constructor.setAccessible(true);

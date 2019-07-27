@@ -91,13 +91,14 @@ public class UclTransformer {
 							System.arraycopy(args, 0, newArgs, 1, args.length);
 							args = newArgs;
 							
-							cast.desc = Type.getMethodDescriptor(Type.getType("Lnet/theopalgames/descript/IClassLoaderDelegate;"), newArgs);
+							cast.desc = Type.getMethodDescriptor(Type.getType("L" + INTERFACE + ";"), newArgs);
 							
 							method.instructions.insertBefore(cast, new VarInsnNode(Opcodes.ILOAD, 3));
 							method.instructions.insert(cast, new InsnNode(Opcodes.POP2));
 						}
 					}
 			} else if (method.name.equals("findClass")) {
+//				System.out.println("Transforming findClass...");
 				method.desc = "(Ljava/lang/String;Z)Ljava/lang/Object;";
 				
 				for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator())
@@ -109,6 +110,8 @@ public class UclTransformer {
 							method.instructions.insertBefore(cast, new VarInsnNode(Opcodes.ILOAD, 2));
 						}
 					}
+				
+//				System.out.println("findClass desc: " + method.desc);
 			} else if (method.name.equals("<init>")) {
 				if (!method.desc.equals("([Ljava/net/URL;Ljava/lang/ClassLoader;)V"))
 					toRemove.add(method);
@@ -135,6 +138,9 @@ public class UclTransformer {
 							iter.remove();
 					}
 				}
+			} else if (method.name.equals("addURL")) {
+				method.access &= ~Opcodes.ACC_PROTECTED;
+				method.access |= Opcodes.ACC_PUBLIC;
 			}
 			
 			for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator())
@@ -174,7 +180,26 @@ public class UclTransformer {
 			method.desc = newType.getDescriptor();
 		}
 		
+//		toRemove.stream().map(method -> method.name + method.desc).forEach(System.out::println);
 		clazz.methods.removeAll(toRemove);
+		
+		MethodNode getBytes = new MethodNode(Opcodes.ACC_PUBLIC, "getBytes", "(Ljava/lang/String;)[B", null, null);
+		getBytes.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+		getBytes.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
+		getBytes.instructions.add(new InsnNode(Opcodes.ICONST_0));
+		getBytes.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/theopalgames/descript/ucl/ClassLoaderDelegate", "findClass", "(Ljava/lang/String;Z)Ljava/lang/Object;", false));
+		getBytes.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, "[B"));
+		getBytes.instructions.add(new InsnNode(Opcodes.ARETURN));
+		clazz.methods.add(getBytes);
+		
+		MethodNode getCodeSource = new MethodNode(Opcodes.ACC_PUBLIC, "getCodeSource", "(Ljava/lang/String;)Ljava/security/CodeSource;", null, null);
+		getCodeSource.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+		getCodeSource.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
+		getCodeSource.instructions.add(new InsnNode(Opcodes.ICONST_1));
+		getCodeSource.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/theopalgames/descript/ucl/ClassLoaderDelegate", "findClass", "(Ljava/lang/String;Z)Ljava/lang/Object;", false));
+		getCodeSource.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/security/CodeSource"));
+		getCodeSource.instructions.add(new InsnNode(Opcodes.ARETURN));
+		clazz.methods.add(getCodeSource);
 		
 		for (InnerClassNode inner : clazz.innerClasses)
 			InnerUclTransformer.loadBytes(inner.name, classLoader);
@@ -202,7 +227,7 @@ public class UclTransformer {
 		return newBytes;
 	}
 	
-	public static void setJavaNetAccess(Object ourNull, Object dup) { // Suck up the stack entries
+	public void setJavaNetAccess(Object ourNull, Object dup) { // Suck up the stack entries
 		// NOOP
 	}
 }

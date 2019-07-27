@@ -19,7 +19,7 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
 import net.theopalgames.descript.containers.DelegatingModInfo;
-import net.theopalgames.descript.init.CoreModLoader;
+import net.theopalgames.descript.coremods.CoreModLoader;
 
 public final class ModListTransformer implements ITransformer<MethodNode> {
 	@Override
