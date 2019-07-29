@@ -18,7 +18,7 @@ import net.theopalgames.descript.init.UclClassLoader;
 
 @UtilityClass
 public class InnerUclTransformer {
-	public void loadBytes(String name, UclClassLoader classLoader) throws Exception {
+	public void loadBytes(String name, UclClassLoader classLoader, String clPackage) throws Exception {
 //		System.out.println("Transforming inner class: " + name);
 		
 		if (!name.startsWith("java/net/"))
@@ -35,7 +35,7 @@ public class InnerUclTransformer {
 		ClassNode clazz = new ClassNode();
 		new ClassReader(bytes).accept(clazz, ClassReader.SKIP_FRAMES);
 		
-		clazz.name = clazz.name.replace("java/net/", "net/theopalgames/descript/ucl/");
+		clazz.name = clazz.name.replace("java/net/URLClassLoader", "net/theopalgames/descript/ucl/ClassLoaderDelegate");
 		
 		for (MethodNode method : clazz.methods) {
 			Type type = Type.getMethodType(method.desc);
@@ -50,8 +50,12 @@ public class InnerUclTransformer {
 				if (insn instanceof MethodInsnNode) {
 					MethodInsnNode cast = (MethodInsnNode) insn;
 					
-					if (cast.owner.equals("java/net/URLClassLoader"))
+					if (cast.owner.equals("java/net/URLClassLoader")) {
 						cast.owner = "net/theopalgames/descript/ucl/ClassLoaderDelegate";
+					
+						if (cast.name.equals("defineClass"))
+							cast.desc = "(Ljava/lang/String;L" + clPackage + "/Resource;)Lorg/apache/commons/lang3/tuple/Pair;";
+					}
 				} else if (insn instanceof FieldInsnNode) {
 					FieldInsnNode cast = (FieldInsnNode) insn;
 					
@@ -68,6 +72,7 @@ public class InnerUclTransformer {
 		byte[] newBytes = cw.toByteArray();
 		
 		Class<?> oldClass = Class.forName(name.replace('/', '.'));
-		classLoader.createClass(clazz.name.replace('/', '.'), newBytes, oldClass.getProtectionDomain());
+		Class<?> newClass = classLoader.createClass(clazz.name.replace('/', '.'), newBytes, oldClass.getProtectionDomain());
+		newClass.getName(); // Make sure it fully initializes
 	}
 }

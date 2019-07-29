@@ -5,10 +5,12 @@ import java.io.InputStream;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.security.CodeSource;
+import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -22,7 +24,6 @@ import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TypeInsnNode;
-import org.objectweb.asm.tree.VarInsnNode;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
@@ -54,7 +55,7 @@ public class UclTransformer {
 		for (FieldNode field : clazz.fields)
 			if (field.name.equals("ucp")) {
 				Type type = Type.getType(field.desc);
-				String[] parts = type.getClassName().split("/");
+				String[] parts = type.getInternalName().split("/");
 				
 				String[] pkgParts = new String[parts.length-1];
 				System.arraycopy(parts, 0, pkgParts, 0, pkgParts.length);
@@ -65,10 +66,12 @@ public class UclTransformer {
 			throw new IllegalStateException("What weird JDK are you using?");
 		
 		List<MethodNode> toRemove = new ArrayList<>();
+		boolean descChanged;
 		
 		for (MethodNode method : clazz.methods) {
 			Type type = Type.getMethodType(method.desc);
 			Type[] args = type.getArgumentTypes();
+			descChanged = false;
 			
 			for (int i = 0; i < args.length; i++) {
 				if (args[i].getDescriptor().equals("Ljava/net/URLClassLoader;"))
@@ -76,39 +79,46 @@ public class UclTransformer {
 			}
 			
 			if (method.name.equals("defineClass")) {
-				method.desc = "(Ljava/lang/String;L" + clPackage + "/Resource;Z)Ljava/lang/Object;";
+//				System.out.println("Found defineClass method in ClassLoaderDelegate");
+				
+				method.desc = "(Ljava/lang/String;L" + clPackage + "/Resource;)Lorg/apache/commons/lang3/tuple/Pair;";
+				descChanged = true;
 				
 				for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator())
 					if (insn instanceof MethodInsnNode) {
 						MethodInsnNode cast = (MethodInsnNode) insn;
 						
-						if (cast.owner.equals("java/security/SecureClassLoader") && cast.name.equals("defineClass")) {
+//						System.out.println("Checking method " + cast.owner + "/" + cast.name + cast.desc);
+						
+						if ((cast.owner.equals("java/security/SecureClassLoader") || cast.owner.equals(OLD_NAME)) && cast.name.equals("defineClass")) {
+//							System.out.println("Transforming defineClass call...");
+							
 							cast.setOpcode(Opcodes.INVOKESTATIC);
 							cast.owner = "net/theopalgames/descript/transformers/UclTransformer";
 							
-							Type[] newArgs = new Type[args.length+1];
-							newArgs[0] = Type.getType("Ljava/lang/Object;");
-							System.arraycopy(args, 0, newArgs, 1, args.length);
-							args = newArgs;
+							Type[] ourArgs = Type.getArgumentTypes(cast.desc);
+							Type[] newArgs = new Type[ourArgs.length+1];
+							newArgs[0] = Type.getType("Ljava/security/SecureClassLoader;");
+							System.arraycopy(ourArgs, 0, newArgs, 1, ourArgs.length);
 							
-							cast.desc = Type.getMethodDescriptor(Type.getType("L" + INTERFACE + ";"), newArgs);
-							
-							method.instructions.insertBefore(cast, new VarInsnNode(Opcodes.ILOAD, 3));
-							method.instructions.insert(cast, new InsnNode(Opcodes.POP2));
+							cast.desc = Type.getMethodDescriptor(Type.getType("Lorg/apache/commons/lang3/tuple/Pair;"), newArgs);
 						}
 					}
 			} else if (method.name.equals("findClass")) {
 //				System.out.println("Transforming findClass...");
-				method.desc = "(Ljava/lang/String;Z)Ljava/lang/Object;";
+				
+				method.access &= ~Opcodes.ACC_PROTECTED;
+				method.access |= Opcodes.ACC_PUBLIC;
+				
+				method.desc = "(Ljava/lang/String;)Lorg/apache/commons/lang3/tuple/Pair;";
+				descChanged = true;
 				
 				for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator())
-					if (insn instanceof MethodInsnNode) {
-						MethodInsnNode cast = (MethodInsnNode) insn;
+					if (insn instanceof TypeInsnNode) {
+						TypeInsnNode cast = (TypeInsnNode) insn;
 						
-						if (cast.owner.equals("java/net/URLClassLoader") && cast.name.equals("defineClass")) {
-							cast.desc = "(Ljava/lang/String;L" + clPackage + "/Resource;Z)Ljava/lang/Object;";
-							method.instructions.insertBefore(cast, new VarInsnNode(Opcodes.ILOAD, 2));
-						}
+						if (cast.getOpcode() == Opcodes.CHECKCAST && cast.desc.equals("java/lang/Class"))
+							cast.desc = "org/apache/commons/lang3/tuple/Pair";
 					}
 				
 //				System.out.println("findClass desc: " + method.desc);
@@ -172,59 +182,41 @@ public class UclTransformer {
 						cast.desc = cast.desc.replaceAll("java/net/URLClassLoader", "net/theopalgames/descript/ucl/ClassLoaderDelegate");
 				}
 			
-			Type ret = type.getReturnType();
-			if (ret.getDescriptor().equals("Ljava/lang/ClassLoader;"))
-				ret = Type.getType("Lnet/theopalgames/descript/ucl/ClassLoaderDelegate;");
-			
-			Type newType = Type.getMethodType(ret, args);
-			method.desc = newType.getDescriptor();
+			if (!descChanged) {
+				Type ret = type.getReturnType();
+				if (ret.getDescriptor().equals("Ljava/lang/ClassLoader;"))
+					ret = Type.getType("Lnet/theopalgames/descript/ucl/ClassLoaderDelegate;");
+				
+				Type newType = Type.getMethodType(ret, args);
+				method.desc = newType.getDescriptor();
+			}
 		}
 		
 //		toRemove.stream().map(method -> method.name + method.desc).forEach(System.out::println);
 		clazz.methods.removeAll(toRemove);
 		
-		MethodNode getBytes = new MethodNode(Opcodes.ACC_PUBLIC, "getBytes", "(Ljava/lang/String;)[B", null, null);
-		getBytes.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		getBytes.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-		getBytes.instructions.add(new InsnNode(Opcodes.ICONST_0));
-		getBytes.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/theopalgames/descript/ucl/ClassLoaderDelegate", "findClass", "(Ljava/lang/String;Z)Ljava/lang/Object;", false));
-		getBytes.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, "[B"));
-		getBytes.instructions.add(new InsnNode(Opcodes.ARETURN));
-		clazz.methods.add(getBytes);
-		
-		MethodNode getCodeSource = new MethodNode(Opcodes.ACC_PUBLIC, "getCodeSource", "(Ljava/lang/String;)Ljava/security/CodeSource;", null, null);
-		getCodeSource.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
-		getCodeSource.instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
-		getCodeSource.instructions.add(new InsnNode(Opcodes.ICONST_1));
-		getCodeSource.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/theopalgames/descript/ucl/ClassLoaderDelegate", "findClass", "(Ljava/lang/String;Z)Ljava/lang/Object;", false));
-		getCodeSource.instructions.add(new TypeInsnNode(Opcodes.CHECKCAST, "java/security/CodeSource"));
-		getCodeSource.instructions.add(new InsnNode(Opcodes.ARETURN));
-		clazz.methods.add(getCodeSource);
-		
-		for (InnerClassNode inner : clazz.innerClasses)
-			InnerUclTransformer.loadBytes(inner.name, classLoader);
+		for (InnerClassNode inner : clazz.innerClasses) {
+			inner.name = inner.name.replace("java/net/URLClassLoader", "net/theopalgames/descript/ucl/ClassLoaderDelegate");
+			InnerUclTransformer.loadBytes(inner.name, classLoader, clPackage);
+		}
 		
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 		clazz.accept(cw);
 		return cw.toByteArray();
 	}
 	
-	public Object defineClass(String name, ByteBuffer bb, CodeSource source, boolean retSource) {
-		if (retSource)
-			return source;
-		
+	public Pair<byte[], CodeSource> defineClass(SecureClassLoader classLoader, String name, ByteBuffer bb, CodeSource source) {
 		byte[] bytes = new byte[bb.remaining()];
 		bb.get(bytes);
-		return bytes;
+		
+		return Pair.of(bytes, source);
 	}
 	
-	public Object defineClass(String name, byte[] bytes, int offset, int length, CodeSource source, boolean retSource) {
-		if (retSource)
-			return source;
-		
+	public Pair<byte[], CodeSource> defineClass(SecureClassLoader classLoader, String name, byte[] bytes, int offset, int length, CodeSource source) {
 		byte[] newBytes = new byte[length];
 		System.arraycopy(bytes, offset, newBytes, 0, length);
-		return newBytes;
+		
+		return Pair.of(bytes, source);
 	}
 	
 	public void setJavaNetAccess(Object ourNull, Object dup) { // Suck up the stack entries
