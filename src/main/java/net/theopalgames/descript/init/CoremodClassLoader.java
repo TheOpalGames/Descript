@@ -28,6 +28,8 @@ public final class CoremodClassLoader extends SecureClassLoader {
 	
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
+		System.out.println("Loading coremod class: " + name);
+		
 		if (name.startsWith("net.theopalgames.descript.init."))
 			return parent.loadClass(name);
 		else if (name.startsWith("net.theopalgames.descript.ucl."))
