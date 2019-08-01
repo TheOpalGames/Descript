@@ -14,6 +14,7 @@ public final class DelegatingModInfo extends ModInfo {
 	
 	static {
 		CONFIG = Config.inMemory();
+		CONFIG.set("modId", "broken-descript-mod");
 		CONFIG.set("description", "Uh oh...something went wrong in Descript...get it? Descript, description? Anyway, you should report it.");
 	}
 	
