@@ -74,8 +74,8 @@ public class UclTransformer {
 			descChanged = false;
 			
 			for (int i = 0; i < args.length; i++) {
-				if (args[i].getDescriptor().equals("Ljava/net/URLClassLoader;"))
-					args[i] = Type.getType("Lnet/theopalgames/descript/ucl/ClassLoaderDelegate;");
+				if (args[i].getDescriptor().startsWith("Ljava/net/URLClassLoader"))
+					args[i] = Type.getType(args[i].getDescriptor().replace("java/net/URLClassLoader", "net/theopalgames/descript/ucl/ClassLoaderDelegate"));
 			}
 			
 			if (method.name.equals("defineClass")) {
@@ -196,8 +196,8 @@ public class UclTransformer {
 		clazz.methods.removeAll(toRemove);
 		
 		for (InnerClassNode inner : clazz.innerClasses) {
-			inner.name = inner.name.replace("java/net/URLClassLoader", "net/theopalgames/descript/ucl/ClassLoaderDelegate");
 			InnerUclTransformer.loadBytes(inner.name, classLoader, clPackage);
+			inner.name = inner.name.replace("java/net/URLClassLoader", "net/theopalgames/descript/ucl/ClassLoaderDelegate");
 		}
 		
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);

@@ -6,11 +6,13 @@ import java.security.SecureClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import net.theopalgames.descript.reflect.ReflectUtil;
 import net.theopalgames.descript.transformers.UclTransformer;
 
 public final class UclClassLoader extends SecureClassLoader {
-	private final Map<String, Class<?>> loadedClasses = new HashMap<>();
+	private final Map<String, Pair<byte[], ProtectionDomain>> loadedClasses = new HashMap<>();
 	
 	public IClassLoaderDelegate getDelegate() {
 		byte[] uclBytes = UclTransformer.getUclLoader(this);
@@ -19,14 +21,16 @@ public final class UclClassLoader extends SecureClassLoader {
 		return ReflectUtil.findConstructor(cast, URL[].class, ClassLoader.class).newInstance((Object) new URL[0], getClass().getClassLoader());
 	}
 	
-	public Class<?> createClass(String name, byte[] bytes, ProtectionDomain domain) {
-		Class<?> clazz = defineClass(name, bytes, 0, bytes.length, domain);
-		loadedClasses.put(name, clazz);
-		return clazz;
+	public void createClass(String name, byte[] bytes, ProtectionDomain domain) {
+//		System.out.println("Defining UCL class " + name);
+		loadedClasses.put(name, Pair.of(bytes, domain));
 	}
 	
 	@Override
 	public Class<?> findClass(String name) {
-		return loadedClasses.get(name);
+//		System.out.println("Loading UCL class " + name);
+		
+		Pair<byte[], ProtectionDomain> pair = loadedClasses.get(name);
+		return defineClass(name, pair.getLeft(), 0, pair.getLeft().length, pair.getRight());
 	}
 }
