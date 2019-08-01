@@ -22,7 +22,11 @@ sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = co
 sourceSets {
     main {
         java {
-            srcDirs += ["src/api/java"] // Thanks StackOverflow
+            srcDir "src/api/java" // Thanks StackOverflow
+        }
+        
+        resources {
+        	srcDir "src/main/js"
         }
     }
 }
