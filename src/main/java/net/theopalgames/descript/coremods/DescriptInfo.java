@@ -8,12 +8,24 @@ import java.util.Map;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
+import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.theopalgames.descript.api.IDescriptModInfo;
 
 public final class DescriptInfo implements IDescriptModInfo {
+	public static final String MODID = "descript";
+	public static final String NAME = "Descript";
+	public static final String VERSION = "1.0";
+	
+	private static final Config CONFIG = Config.inMemory();
+	
+	static {
+		CONFIG.set("modId", MODID);
+		CONFIG.set("authors", "Hallowizer");
+	}
+	
 	@Override
 	public IModFileInfo getOwningFile() {
 		return null; // Unused method
@@ -21,12 +33,12 @@ public final class DescriptInfo implements IDescriptModInfo {
 	
 	@Override
 	public String getModId() {
-		return "descript";
+		return MODID;
 	}
 	
 	@Override
 	public String getDisplayName() {
-		return "Descript";
+		return NAME;
 	}
 	
 	@Override
@@ -36,7 +48,7 @@ public final class DescriptInfo implements IDescriptModInfo {
 	
 	@Override
 	public ArtifactVersion getVersion() {
-		return new DefaultArtifactVersion("1.0");
+		return new DefaultArtifactVersion(VERSION);
 	}
 	
 	@Override
@@ -46,7 +58,7 @@ public final class DescriptInfo implements IDescriptModInfo {
 	
 	@Override
 	public UnmodifiableConfig getModConfig() {
-		return null; // Unused method
+		return CONFIG;
 	}
 	
 	@Override
@@ -66,6 +78,6 @@ public final class DescriptInfo implements IDescriptModInfo {
 	
 	@Override
 	public String getMain() {
-		return DescriptInfo.class.getName();
+		return null;
 	}
 }
