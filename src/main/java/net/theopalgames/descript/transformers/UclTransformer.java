@@ -68,9 +68,12 @@ public class UclTransformer {
 		List<MethodNode> toRemove = new ArrayList<>();
 		boolean descChanged;
 		
+		String descAccess100 = null;
+		
 		for (MethodNode method : clazz.methods) {
 			Type type = Type.getMethodType(method.desc);
 			Type[] args = type.getArgumentTypes();
+			Type ret = type.getReturnType();
 			descChanged = false;
 			
 			for (int i = 0; i < args.length; i++) {
@@ -151,6 +154,16 @@ public class UclTransformer {
 			} else if (method.name.equals("addURL")) {
 				method.access &= ~Opcodes.ACC_PROTECTED;
 				method.access |= Opcodes.ACC_PUBLIC;
+			} else if (method.name.equals("access$100")) {
+				ret = Type.getType("Lorg/apache/commons/lang3/tuple/Pair;");
+				
+				for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator())
+					if (insn instanceof MethodInsnNode) {
+						MethodInsnNode cast = (MethodInsnNode) insn;
+						
+						if (cast.name.equals("defineClass"))
+							cast.desc = "(Ljava/lang/String;L" + clPackage + "/Resource;)Lorg/apache/commons/lang3/tuple/Pair;";
+					}
 			}
 			
 			for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator())
@@ -183,20 +196,22 @@ public class UclTransformer {
 				}
 			
 			if (!descChanged) {
-				Type ret = type.getReturnType();
 				if (ret.getDescriptor().equals("Ljava/lang/ClassLoader;"))
 					ret = Type.getType("Lnet/theopalgames/descript/ucl/ClassLoaderDelegate;");
 				
 				Type newType = Type.getMethodType(ret, args);
 				method.desc = newType.getDescriptor();
 			}
+			
+			if (method.name.equals("access$100"))
+				descAccess100 = method.desc;
 		}
 		
 //		toRemove.stream().map(method -> method.name + method.desc).forEach(System.out::println);
 		clazz.methods.removeAll(toRemove);
 		
 		for (InnerClassNode inner : clazz.innerClasses) {
-			InnerUclTransformer.loadBytes(inner.name, classLoader, clPackage);
+			InnerUclTransformer.loadBytes(inner.name, classLoader, clPackage, descAccess100);
 			inner.name = inner.name.replace("java/net/URLClassLoader", "net/theopalgames/descript/ucl/ClassLoaderDelegate");
 		}
 		

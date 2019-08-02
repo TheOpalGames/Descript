@@ -52,6 +52,9 @@ public class CoreModLoader {
 		Function<String, URL> oldFinder = ReflectUtil.readField(TransformingClassLoader.class, "classBytesFinder", CoremodClassLoader.gameLoader);
 		Function<String, URL> newFinder = oldFinder.andThen(url -> (isDescript(url) ? null : url));
 		
+		ClassLoader oldParent = ReflectUtil.readField(ClassLoader.class,  "parent", CoremodClassLoader.gameLoader);
+		ReflectUtil.writeField(ClassLoader.class, "parent", CoremodClassLoader.gameLoader, new DescriptClassLoader(oldParent));
+		
 		ReflectUtil.writeField(TransformingClassLoader.class, "classBytesFinder", CoremodClassLoader.gameLoader, newFinder);
 	}
 	

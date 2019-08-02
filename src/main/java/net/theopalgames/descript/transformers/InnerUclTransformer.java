@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -23,7 +22,7 @@ import net.theopalgames.descript.init.UclClassLoader;
 @UtilityClass
 public class InnerUclTransformer {
 	@SuppressWarnings("unchecked")
-	public void loadBytes(String name, UclClassLoader classLoader, String clPackage) throws Exception {
+	public void loadBytes(String name, UclClassLoader classLoader, String clPackage, String descAccess100) throws Exception {
 //		System.out.println("Transforming inner class: " + name);
 		
 		if (!name.startsWith("java/net/"))
@@ -50,6 +49,7 @@ public class InnerUclTransformer {
 		for (MethodNode method : clazz.methods) {
 			Type type = Type.getMethodType(method.desc);
 			Type[] args = type.getArgumentTypes();
+			boolean descChanged = false;
 			
 			for (int i = 0; i < args.length; i++) {
 				if (args[i].getDescriptor().equals("Ljava/net/URLClassLoader;"))
@@ -57,6 +57,11 @@ public class InnerUclTransformer {
 			}
 			
 //			System.out.println("\n" + clazz.name + "" + method.name + method.desc);
+			
+			if (clazz.name.equals("net/theopalgames/descript/ucl/ClassLoaderDelegate$1") && method.name.equals("run") && method.desc.equals("()Ljava/lang/Class;")) {
+				method.desc = "()Lorg/apache/commons/lang3/tuple/Pair;";
+				descChanged = true;
+			}
 			
 			for (AbstractInsnNode insn : (Iterable<AbstractInsnNode>) () -> method.instructions.iterator()) {
 //				System.out.println(insn.getOpcode());
@@ -69,6 +74,10 @@ public class InnerUclTransformer {
 						
 						if (cast.name.equals("defineClass"))
 							cast.desc = "(Ljava/lang/String;L" + clPackage + "/Resource;)Lorg/apache/commons/lang3/tuple/Pair;";
+						else if (cast.name.equals("access$100"))
+							cast.desc = descAccess100;
+						else if (cast.name.equals("run"))
+							cast.desc = "()Lorg/apache/commons/lang3/tuple/Pair;";
 					}
 					
 					Type calleeType = Type.getMethodType(cast.desc);
@@ -81,8 +90,8 @@ public class InnerUclTransformer {
 					
 					cast.desc = Type.getMethodType(calleeType.getReturnType(), calleeargs).getDescriptor();
 					
-					if (cast.getOpcode() == Opcodes.INVOKEVIRTUAL)
-						System.out.println(clazz.name + "/" + method.name + method.desc + " -> " + cast.owner + "/" + cast.name + cast.desc);
+//					if (cast.getOpcode() == Opcodes.INVOKEVIRTUAL)
+//						System.out.println(clazz.name + "/" + method.name + method.desc + " -> " + cast.owner + "/" + cast.name + cast.desc);
 				} else if (insn instanceof FieldInsnNode) {
 					FieldInsnNode cast = (FieldInsnNode) insn;
 					
@@ -106,8 +115,10 @@ public class InnerUclTransformer {
 				}
 			}
 			
-			Type newType = Type.getMethodType(type.getReturnType(), args);
-			method.desc = newType.getDescriptor();
+			if (!descChanged) {
+				Type newType = Type.getMethodType(type.getReturnType(), args);
+				method.desc = newType.getDescriptor();
+			}
 		}
 		
 		ClassWriter cw = new ClassWriter(0);

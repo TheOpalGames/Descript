@@ -6,6 +6,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -25,7 +27,7 @@ import net.minecraftforge.coremod.CoreModProvider;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.moddiscovery.CoreModFile;
 
-// WARNING: If you make any changes to this file, you need to recompile it and put the bytes into src/main/js/core-plugin.js
+// WARNING: No warning anymore lol
 
 @UtilityClass
 public class DescriptInit {
@@ -46,6 +48,8 @@ public class DescriptInit {
 		
 		List<CoreMod> coreMods = readField(CoreModEngine.class, "coreMods", engine);
 		CoreModFile fileWrapper;
+		Path path;
+		FileSystem fs;
 		File file = null;
 		JarEntry entry;
 		byte[] bytes;
@@ -53,7 +57,13 @@ public class DescriptInit {
 		
 		for (CoreMod coreMod : coreMods) {
 			fileWrapper = readField(CoreMod.class, "file", coreMod);
-			file = fileWrapper.getPath().toFile();
+			path = fileWrapper.getPath();
+			fs = path.getFileSystem();
+			
+			if (fs.getClass().getName().endsWith(".ZipFileSystem"))
+				path = readField(fs.getClass(), "zfpath", fs);
+			
+			file = path.toFile();
 			
 			if (file.isFile()) {
 				if (file.getName().endsWith(".jar"))
