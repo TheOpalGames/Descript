@@ -4,11 +4,14 @@ Copyright (c) 2019 The Opal Games
 
 In the present, Descript has no license, which may be changed some time in the future. This means you cannot redistribute it, unless given explicit permission. If you would like to redistribute it, send Hallowizer a PM.
 
+## When this license applies
+Only the latest license applies, even on earlier code. If this is not the latest version of Descript, this license does not apply. 
+
 ## Dependency Use
-Descript was created as an API for use, so you may create mods that depend on it, and are encouraged to! Feel free to create a mod that uses Descript!
+Descript was created as an API for use, so you may create mods that depend on it, and are encouraged to! Feel free to create a mod that uses Descript! Unfortunately, we do ask that your coremod is not obfuscated, and preferably open source. We have done this in order to preserve Forge's efforts to chase after malicious coremods, as seen in [this thread](https://www.minecraftforge.net/forum/topic/58708-banboycot-fastcraft-it-is-obfuscated-and/).
 
 ## Modpack Use
-Your modpack may contain mods that require Descript. As such, you may include Descript in your modpack. As a friendly reminder, please remember to check the license of these mods to see if you are allowed to include them in your modpack. You do not need to link back here, but you may if you wish. Additionally, you must not claim you made Descript.
+Your modpack might contain mods that require Descript. As such, you may include Descript in your modpack. As a friendly reminder, please remember to check the license of these mods to see if you are allowed to include them in your modpack. You do not need to link back here, but you may if you wish. Additionally, you must not claim you made Descript.
 
 ## Disclaimer
 NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
